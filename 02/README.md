@@ -59,7 +59,7 @@ This test will not compile yet, of course, because we haven't written the `Run()
 
 When the tests pass, you're done! Go on to the next exercise:
 
-* [Getting in Shape](../02/README.md)
+* [NOP what I was expecting](../03/README.md)
 
 ## What's this?
 
