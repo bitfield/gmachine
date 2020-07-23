@@ -2,7 +2,7 @@
 
 ![](../img/soldering.svg)
 
-Welcome to your first day as Vice-President of Virtualized Processor Design! You will find a key to the executive washroom on your desk, and free candy and snacks are available in the cafeteria. Please note there is no smoking anywhere in the building.
+Welcome to your first day as Vice-President of Virtual Processors! You will find a key to the executive washroom on your desk, and free candy and snacks are available in the cafeteria. Please note there is no smoking anywhere in the building.
 
 Your first job is to begin the design of a new virtual CPU, called the _G-machine_. Don't worry, we'll be tackling this project in easy stages. Let's first set out what exactly is required.
 
@@ -29,7 +29,7 @@ The test is already written for you, so let's get started!
 
 When the tests pass, you're done! Hopefully that was pretty easy. Go on to the next exercise:
 
-* [Getting in Shape](../02/README.md)
+* [Halt and Catch Fire](../02/README.md)
 
 ## What's this?
 
