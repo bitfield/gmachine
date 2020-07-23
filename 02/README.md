@@ -48,15 +48,16 @@ Let's find out!
 1. Creates a new G-machine.
 2. Calls `Run()` on the machine.
 3. Tests that the machine's `P` register contains the value `1`. If not, the test should fail with a message like `"want P == 1, got ..."`
+4. Calls `Run()` again.
+5. Tests that P contains `2`.
 
 This test will not compile yet, of course, because we haven't written the `Run()` method. If it fails to compile for any other reason, keep working on it until it fails to compile because of the missing `Run()` method.
 
-**TASK:** Write the minimum code necessary to make the test pass. (I'm serious about this. For example, even though we talked about a fetch-execute _cycle_, you won't need to implement a loop inside the `Run()` method, because the test doesn't require it to loop. All it needs to do is increment the P register—or, for that matter, simply set it to the value 1.)
-
+**TASK:** Write the _minimum_ code necessary to make the test pass. (I'm serious about this. For example, even though we talked about a fetch-execute _cycle_, you won't need to implement a loop inside the `Run()` method, because the test doesn't require it to loop. All it needs to do is increment the P register and return.)
 
 ## Done?
 
-When the tests pass, you're done! Hopefully that was pretty easy. Go on to the next exercise:
+When the tests pass, you're done! Go on to the next exercise:
 
 * [Getting in Shape](../02/README.md)
 
