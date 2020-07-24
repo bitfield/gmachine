@@ -173,9 +173,7 @@ We'll need to be able to modify the contents of this register, and the simplest 
 
 Remember, we need to see the test fail the right way before we start implementing the code necessary to make it pass. Assuming the test is correct, what will be the result of running it without that implementation? Figure this out for yourself before actually running the test. If the test produces the result you expect, we can have some confidence that it's correct.
 
-**TASK:** Implement the `INCA` instruction.
-
-What will be the result of running the test now? Think about it before you run it. You should be able to predict the exact failure message. If you don't see that message, keep working on the test until you do.
+**TASK:** Implement the `INCA` instruction so that your test passes.
 
 **TASK:** Add a corresponding test for the `DECA` instruction, that first of all sets the A register to the value `2`, then executes a `DECA` instruction, and verifies that the result is `1`. Implement the `DECA` instruction so that the test passes.
 
