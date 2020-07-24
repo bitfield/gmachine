@@ -14,16 +14,18 @@ We will be using a simplified model of a computer system in which there are thre
 * A _memory_ space where the CPU can move data to or from its registers
 * A _BIOS_ (Basic Input/Output System) which provides communications facilities like reading or writing to a terminal
 
-At any given moment, the G-machine has a certain _state_: the contents of its registers, plus the contents of its memory. It has a _clock_ which generates regular 'ticks' of time, and at each tick, or clock cycle, the machine updates its state according to what it happens to be doing.
+At any given moment, the G-machine has a certain _state_: the contents of its registers, plus the contents of its memory.
 
-The first thing users need to be able to do is to create a new G-machine they can use. So you'll be implementing the function `gmachine.New()`, which returns a G-machine in its default initial state, which is:
+The first thing users need to be able to do is to create a new G-machine they can use. So you'll be implementing a `gmachine.New()` function that returns a G-machine in its default initial state, which is:
 
-* Two 64-bit registers, A and P, containing zero
-* 1024 64-bit words of memory, containing zeroes
+* A 64-bit register named P, containing zero
+* 1024 64-bit _words_ (that is, locations) of memory, containing all zeroes
 
 The test is already written for you, in the file [gmachine_test.go](gmachine_test.go), so let's get started!
 
 **TASK:** Write the minimum code to make the test pass. Use the [gmachine.go](gmachine.go) file which has been started for you.
+
+(Hint: create a `struct` type to represent the G-machine, with a `uint64` field representing the P register, and a `[]uint64` field representing the memory. Make sure to initialize this slice to the required length, or the test will fail. The `New()` function should return a pointer to this `struct` type.)
 
 When the test passes, go on to the next section.
 
@@ -136,5 +138,73 @@ Once this test passes, we can do a little refactoring.
 Refactor the tests and the `gmachine` package to use these constants (for example, in `TestNop`, we should set the contents of address zero to `OpNOP`, instead of a literal `1`.)
 
 Use the tests to make sure that your refactoring didn't break anything.
+
+When you're happy with the code, move on to the next section.
+
+# 4: Ascending and Descending
+
+![](img/hiking.svg)
+
+You're doing great! Thanks to you, we have a working virtual processor, and the foundations of an excellent Go library—with tests!
+
+It's time to start adding some more functionality to the G-machine. To truly be a _computer_, we need it to be able to _compute_, that is, to calculate. Let's start by adding a new register for this purpose: the A register.
+
+## The A register
+
+If you think about it, when we're doing some kind of arithmetic, like adding up a list of numbers, we have some concept of 'the current result'. On an electronic calculator, there's a display that shows the number 0 when you turn it on. If you press the `+` key, enter the value `1`, and press the `=` key, the display will show the value `1` (if your calculator is working correctly).
+
+That's the 'current result', and you can keep on adding, subtracting, multiplying, and so on, and at the end of the calculation that result will be the answer. We can imagine a CPU register that plays a similar role; think of it as a kind of scratchpad where you can store intermediate results during a calculation. The technical name is the _accumulator_, but let's call our register `A` for short.
+
+**TASK:** Modify `TestNew` to expect the G-machine to have a `uint64` register named A, just like the existing P register. Implement this so that the test passes.
+
+We'll need to be able to modify the contents of this register, and the simplest way to do that is to _increment_ (add one to) or _decrement_ (subtract one from) it. Let's add some new instructions to do that:
+
+* `INC_A`
+* `DEC_A`
+
+**TASK:** Add a new test `TestIncDecA`. The test should do the following:
+
+1. Create a new G-machine.
+2. Verify that the A register's value is zero.
+3. Set the first memory location to the instruction `INC_A`.
+4. Run the machine.
+5. Verify that the A register's value is `1`.
+6. Set the second memory location to the instruction `DEC_A`.
+7. Run the machine.
+8. Verify that the A register's value is zero.
+
+In effect, we are submitting the following program to the machine:
+
+```
+INC_A
+DEC_A
+HALT
+```
+
+Remember, we need to see the test fail the right way before we start implementing the code necessary to make it pass. Assuming the test is correct, what will be the result of running it without that implementation? Figure this out for yourself before actually running the test. If the test produces the result you expect, we can have some confidence that it's correct.
+
+**TASK:** Implement the `INC_A` instruction.
+
+What will be the result of running the test now? Think about it before you run it. You should be able to predict the exact failure message. If you don't see that message, keep working on the test until you do.
+
+**TASK:** Implement the `DEC_A` instruction.
+
+We now have a machine with basic arithmetic facilities! They might seem rather limited, but there's a lot we can do even with only increment and decrement instructions.
+
+For example, we can set the A register to any value we want, just by executing a long enough sequence of `INC_A` instructions. We've already set the A register to the value 1 in our test, by incrementing it one time from its initial value of zero.
+
+Consider this program:
+
+```
+INC_A
+INC_A
+INC_A
+HALT
+```
+
+Assuming we run it on a freshly-initialized machine, what will be the value of A afterwards? Easy, right? It would be inconvenient to do very complicated arithmetic this way, but the machine is perfectly capable of it in principle. Later, we'll add facilities to make this easier, but let's wrap up this section with a cool demonstration to show the team what you've been up to.
+
+**TASK:** Write a program in the G-machine language which calculates the result of subtracting 2 from 3. Write a test which executes this program and verifies the result.
+
 
 <small>Gopher image by [egonelbre](https://github.com/egonelbre/gophers)</small>
