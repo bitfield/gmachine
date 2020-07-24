@@ -34,12 +34,12 @@ func (g *Machine) Run() {
 		op := g.Memory[g.P]
 		g.P++
 		switch op {
-		case OpINCA:
-			g.A++
 		case OpDECA:
 			g.A--
 		case OpHALT:
 			return
+		case OpINCA:
+			g.A++
 		}
 	}
 }
