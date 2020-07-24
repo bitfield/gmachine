@@ -9,19 +9,21 @@ const DefaultMemSize = 1024
 const (
 	OpHALT = iota
 	OpNOP
+	OpINCA
+	OpDECA
 )
 
 // Machine represents an instance of the G-machine, with memory and register
 // state.
 type Machine struct {
-	A, P   int64
-	Memory []int64
+	A, P   uint64
+	Memory []uint64
 }
 
 // New returns a pointer to a new Machine, initialised to its default state.
 func New() *Machine {
 	return &Machine{
-		Memory: make([]int64, DefaultMemSize),
+		Memory: make([]uint64, DefaultMemSize),
 	}
 }
 
@@ -31,7 +33,12 @@ func (g *Machine) Run() {
 	for {
 		op := g.Memory[g.P]
 		g.P++
-		if op == OpHALT {
+		switch op {
+		case OpINCA:
+			g.A++
+		case OpDECA:
+			g.A--
+		case OpHALT:
 			return
 		}
 	}

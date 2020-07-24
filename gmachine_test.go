@@ -17,6 +17,10 @@ func TestNew(t *testing.T) {
 	if wantP != g.P {
 		t.Errorf("want initial P value %d, got %d", wantP, g.P)
 	}
+	var wantA uint64 = 0
+	if wantA != g.A {
+		t.Errorf("want initial A value %d, got %d", wantA, g.A)
+	}
 	var wantMemValue uint64 = 0
 	gotMemValue := g.Memory[gmachine.DefaultMemSize-1]
 	if wantMemValue != gotMemValue {
@@ -42,5 +46,39 @@ func TestNop(t *testing.T) {
 	g.Run()
 	if g.P != 2 {
 		t.Errorf("want P == 2, got %d", g.P)
+	}
+}
+
+func TestIncA(t *testing.T) {
+	g := gmachine.New()
+	g.Memory[0] = gmachine.OpINCA
+	g.Run()
+	if g.A != 1 {
+		t.Errorf("want A == 1, got %d", g.A)
+	}
+}
+
+func TestDecA(t *testing.T) {
+	g := gmachine.New()
+	g.A = 2
+	g.Memory[0] = gmachine.OpDECA
+	g.Run()
+	if g.A != 1 {
+		t.Errorf("want A == 1, got %d", g.A)
+	}
+}
+
+func TestSub3From2(t *testing.T) {
+	g := gmachine.New()
+	copy(g.Memory, []uint64{
+		gmachine.OpINCA,
+		gmachine.OpINCA,
+		gmachine.OpINCA,
+		gmachine.OpDECA,
+		gmachine.OpDECA,
+	})
+	g.Run()
+	if g.A != 1 {
+		t.Errorf("want A == 1, got %d", g.A)
 	}
 }
