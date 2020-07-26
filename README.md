@@ -129,6 +129,8 @@ The test should fail, we expect, because we haven't yet implemented the `NOOP` i
 
 **TASK:** Write the minimum code necessary to make the test pass. _Now_ it's necessary to write a loop, and read the next opcode from memory, and take different actions depending on its value. If we'd done this before, even though the tests didn't require it, we would have committed the sin of premature engineering.
 
+## Opcode constants
+
 Once this test passes, we can do a little refactoring.
 
 **TASK:** Define integer constants `OpHALT` and `OpNOOP`, with the values 0 and 1 respectively.
@@ -202,6 +204,8 @@ Congratulations on a successful demo! Even though the G-machine's architecture i
 
 Let's expand that capability now by adding a powerful new feature: _operands_.
 
+## Operands
+
 Right now we can set the A register to any value we want by executing the `INCA` instruction enough times. But, if you think about it, this means that in order to change the 'input value', we need to rewrite the program. That's a little inconvenient; we would like to be able to ship programs to customers which can operate on _arbitrary_ data.
 
 For example, consider your 'subtract 2' program. It can only operate on the value 3, and in order to subtract 2 from anything else, we have to alter the program. How can we write a 'subtract 2 from any number' program? Or, for that matter, a 'subtract any number from any number' program?
@@ -218,11 +222,15 @@ We know how to define new instructions; we've done that a few times already. Add
 
 How could we incorporate this idea into our existing G-machine architecture? Think about it a little before you read on.
 
+## Implementing operands
+
 One way we could do this is to have the `SETA` instruction trigger a memory _fetch_, just like we fetch the next instruction as part of the fetch-execute cycle. So as part of the implementation for the `SETA` opcode, we could read the contents of memory pointed to by the P register, and put that value into the A register. (We'll need to increment P after this, too, or we won't be able to fetch the next instruction correctly.)
 
 **TASK:** Write a test for the `SETA` instruction, and make it pass. It should not only verify the contents of the A register, but also that the P register is correctly updated following the data fetch.
 
-Excellent! This is an important new capability for the G-machine: we can now write programs that operate on stored data. In fact, we can rewrite the 'subtract 2 from 3' program using this feature.
+## Programs on arbitrary data
+
+Excellent! This is an important new capability for the G-machine: we can now write programs that operate on arbitrary stored data. In fact, we can rewrite the 'subtract 2 from 3' program using this feature.
 
 **TASK:** Rewrite your test for the 'subtract 2 from 3' program so that it executes and verifies the following G-code:
 
@@ -238,9 +246,11 @@ This means we can provide different 'inputs' to this program by writing to that 
 
 **TASK:** Expand your test for the 'subtract 2' program to test three different starting values of A, by writing them to the appropriate memory location and rerunning the machine. You will need to reset the P register to zero each time you update the input value, before you call `Run()`.
 
+## Running programs
+
 Nice work! We have some enterprise customers with a pressing need to subtract 2 from a large set of arbitrary numbers, and this feature will really help our market penetration there.
 
-You've earned a little refactoring, so let's add a facility which will make it easier to write new tests. Instead of having to store our test programs and data into the G-machine's memory and then call `Run()`, let's provide a convenience method which takes a program and runs it for us.
+You've earned a little refactoring, so let's add a facility which will make it easier to write new tests (and, indeed, programs in general). Instead of having to store our test programs and data into the G-machine's memory and then call `Run()`, let's provide a convenience method which takes a program and runs it for us.
 
 **TASK:** Add a method on the G-machine called `RunProgram()` which takes a G-code program, stores it into the machine's memory, and executes it.
 

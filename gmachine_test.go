@@ -6,6 +6,7 @@ import (
 )
 
 func TestNew(t *testing.T) {
+	t.Parallel()
 	g := gmachine.New()
 	wantMemSize := gmachine.DefaultMemSize
 	gotMemSize := len(g.Memory)
