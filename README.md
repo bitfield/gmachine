@@ -1,6 +1,6 @@
 # 1: Welcome to the Machine
 
-![](img/soldering.svg)
+![](img/soldering.png)
 
 Welcome to your first day as Vice-President of Virtual Processors! You will find a key to the executive washroom on your desk, and free candy and snacks are available in the cafeteria. Please note there is no smoking anywhere in the building.
 
@@ -31,7 +31,7 @@ When the test passes, go on to the next section.
 
 # 2: Halt and Catch Fire
 
-![](img/lightbulb.png)
+![](img/mistake.png)
 
 Hey, just FYI, we ran your draft G-machine design past the executive steering committee, and they loved it! Of course it's early days, but I'm sure this is going to be our next killer product. Let's start filling in some of the details.
 
@@ -80,8 +80,6 @@ Let's find out!
 1. Creates a new G-machine.
 2. Calls `Run()` on the machine.
 3. Tests that the machine's `P` register contains the value `1`. If not, the test should fail with a message like `"want P == 1, got ..."`
-4. Calls `Run()` again.
-5. Tests that P contains `2`.
 
 This test will not compile yet, of course, because we haven't written the `Run()` method. If it fails to compile for any other reason, keep working on it until it fails to compile because of the missing `Run()` method.
 
@@ -91,7 +89,7 @@ When you have the tests passing, go on to the next section.
 
 # 3: Busy Doing Nothing
 
-![](img/gamer.svg)
+![](img/gamer.png)
 
 Great job on implementing the `HALT` instruction! We now have a _programmable_ computer system, even though the programs we can write are rather simple. This is the minimal valid G-machine program:
 
@@ -143,7 +141,7 @@ When you're happy with the code, move on to the next section.
 
 # 4: Ascending and Descending
 
-![](img/hiking.svg)
+![](img/hiking.png)
 
 You're doing great! Thanks to you, we have a working virtual processor, and the foundations of an excellent Go library—with tests!
 
@@ -164,7 +162,7 @@ We'll need to be able to modify the contents of this register, and the simplest 
 * `INCA`
 * `DECA`
 
-**TASK:** Add a new test `TestIncA`. The test should do the following:
+**TASK:** Add a new test `TestINCA`. The test should do the following:
 
 1. Create a new G-machine.
 2. Set the first memory location to the instruction `INCA`.
@@ -196,8 +194,71 @@ Assuming we run it on a freshly-initialized machine, what will be the value of A
 
 **TASK:** Write a program in the G-machine language which calculates the result of subtracting 2 from 3. Write a test which executes this program and verifies the result.
 
-# 5: Thing
+# 5: Think of a Number
 
-Congratulations on a successful demo!
+![](img/go-fuzz.png)
+
+Congratulations on a successful demo! Even though the G-machine's architecture is extremely simple, and right now it only has a few instructions, it's capable of solving a wide range of arithmetic problems.
+
+Let's expand that capability now by adding a powerful new feature: _operands_.
+
+Right now we can set the A register to any value we want by executing the `INCA` instruction enough times. But, if you think about it, this means that in order to change the 'input value', we need to rewrite the program. That's a little inconvenient; we would like to be able to ship programs to customers which can operate on _arbitrary_ data.
+
+For example, consider your 'subtract 2' program. It can only operate on the value 3, and in order to subtract 2 from anything else, we have to alter the program. How can we write a 'subtract 2 from any number' program? Or, for that matter, a 'subtract any number from any number' program?
+
+To do that, we need some concept of _data_. That is to say, treating a number stored in memory not as an opcode signifying a machine instruction, but merely as a number. Suppose we were able to write an instruction like:
+
+```
+SETA 5
+```
+
+The effect of this instruction would be to set the A register to the value 5 (or any value we choose). How would this work?
+
+We know how to define new instructions; we've done that a few times already. Adding a new opcode for `SETA` is no problem. But there's something new here: this opcode requires an _operand_, meaning a value to operate on. This value will, naturally, be stored in memory.
+
+How could we incorporate this idea into our existing G-machine architecture? Think about it a little before you read on.
+
+One way we could do this is to have the `SETA` instruction trigger a memory _fetch_, just like we fetch the next instruction as part of the fetch-execute cycle. So as part of the implementation for the `SETA` opcode, we could read the contents of memory pointed to by the P register, and put that value into the A register. (We'll need to increment P after this, too, or we won't be able to fetch the next instruction correctly.)
+
+**TASK:** Write a test for the `SETA` instruction, and make it pass. It should not only verify the contents of the A register, but also that the P register is correctly updated following the data fetch.
+
+Excellent! This is an important new capability for the G-machine: we can now write programs that operate on stored data. In fact, we can rewrite the 'subtract 2 from 3' program using this feature.
+
+**TASK:** Rewrite your test for the 'subtract 2 from 3' program so that it executes and verifies the following G-code:
+
+```
+SETA 3
+DECA
+DECA
+```
+
+Although this looks very similar to the previous implementation, there's an important difference. The starting value of A is controlled not by the program instructions, but by the contents of memory location 1 (that is, the second memory location).
+
+This means we can provide different 'inputs' to this program by writing to that memory location.
+
+**TASK:** Expand your test for the 'subtract 2' program to test three different starting values of A, by writing them to the appropriate memory location and rerunning the machine. You will need to reset the P register to zero each time you update the input value, before you call `Run()`.
+
+Nice work! We have some enterprise customers with a pressing need to subtract 2 from a large set of arbitrary numbers, and this feature will really help our market penetration there.
+
+You've earned a little refactoring, so let's add a facility which will make it easier to write new tests. Instead of having to store our test programs and data into the G-machine's memory and then call `Run()`, let's provide a convenience method which takes a program and runs it for us.
+
+**TASK:** Add a method on the G-machine called `RunProgram()` which takes a G-code program, stores it into the machine's memory, and executes it.
+
+For example, if we wanted to rewrite our original `TestNOOP` test to use `RunProgram()`, we might write it something like this:
+
+```go
+g := gmachine.New()
+g.RunProgram([]uint64{
+    gmachine.OpNOOP,
+    gmachine.OpHALT,
+})
+if g.P != 2 {
+    		t.Errorf("want P == 2, got %d", g.P)
+}
+```
+
+Rewrite `TestNOOP()` to use `RunProgram()`, and make sure it still passes.
+
+**TASK:** Refactor all the existing tests to use `RunProgram()`.
 
 <small>Gopher image by [egonelbre](https://github.com/egonelbre/gophers)</small>
