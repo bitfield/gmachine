@@ -263,7 +263,7 @@ g.RunProgram([]uint64{
     gmachine.OpHALT,
 })
 if g.P != 2 {
-    		t.Errorf("want P == 2, got %d", g.P)
+    t.Errorf("want P == 2, got %d", g.P)
 }
 ```
 
