@@ -75,7 +75,7 @@ So the upshot of all this is that if you call `Run()` on a new machine, it shoul
 
 Let's find out!
 
-**TASK:** Write a test function `TestHalt` which does the following:
+**TASK:** Write a test function `TestHALT` which does the following:
 
 1. Creates a new G-machine.
 2. Calls `Run()` on the machine.
@@ -89,7 +89,7 @@ This test will not compile yet, of course, because we haven't written the `Run()
 
 When you have the tests passing, go on to the next section.
 
-# 3: NOP what I was expecting
+# 3: Busy Doing Nothing
 
 ![](img/gamer.svg)
 
@@ -103,39 +103,39 @@ In fact, that's also the _maximal_ program right now, since while we can write l
 
 We ran your prototype by the Marketing group, and the feedback was generally positive, but they asked if you couldn't add at least one more instruction, so that we can write and sell useful software for the machine.
 
-## The NOP instruction
+## The NOOP instruction
 
-The next instruction to implement will be `NOP`, short for No OPeration, which does nothing. This might sound a bit similar to the `HALT` instruction, which does nothing and halts, but there _is_ a difference: the `NOP` instruction doesn't halt! Let's assign it opcode 1.
+The next instruction to implement will be `NOOP`, short for "NO OPeration", which does nothing. This might sound a bit similar to the `HALT` instruction, which does nothing and halts, but there _is_ a difference: the `NOOP` instruction doesn't halt! Let's assign it opcode 1.
 
-So let's do another thought experiment. What happens if we write the opcode for the `NOP` instruction into memory address zero, and start the machine? (Think about it before you read on.)
+So let's do another thought experiment. What happens if we write the opcode for the `NOOP` instruction into memory address zero, and start the machine? (Think about it before you read on.)
 
-Well, we know P starts at zero, so the first thing the machine will do is read the instruction at address zero, which is `NOP`. Since this has no effect, the fetch-execute cycle will continue, and the machine will fetch the instruction at address 1, which is `HALT`. And the machine should stop, with the program counter P containing the value `2`.
+Well, we know P starts at zero, so the first thing the machine will do is read the instruction at address zero, which is `NOOP`. Since this has no effect, the fetch-execute cycle will continue, and the machine will fetch the instruction at address 1, which is `HALT`. And the machine should stop, with the program counter P containing the value `2`.
 
 To put it another, equivalent, way, we're submitting the following program to the machine:
 
 ```
-NOP
+NOOP
 HALT
 ```
 
 Let's make it work!
 
-**TASK:** Write a test function `TestNop` which does the following:
+**TASK:** Write a test function `TestNOOP` which does the following:
 
 1. Creates a new G-machine.
 2. Sets the contents of the first memory location to 1.
 3. Calls `Run()` on the machine.
 4. Tests that the machine's `P` register contains the value `2`. If not, the test should fail with a message like `"want P == 2, got ..."`
 
-The test should fail, we expect, because we haven't yet implemented the `NOP` instruction. If we've strictly obeyed the test-driven development process, we haven't even implemented a loop in the `Run()` method, or read any instructions from memory, because we didn't need to until now. So the test should fail because P contains `1` instead of `2`. (If it fails for any other reason, keep working, until it fails for that reason.)
+The test should fail, we expect, because we haven't yet implemented the `NOOP` instruction. If we've strictly obeyed the test-driven development process, we haven't even implemented a loop in the `Run()` method, or read any instructions from memory, because we didn't need to until now. So the test should fail because P contains `1` instead of `2`. (If it fails for any other reason, keep working, until it fails for that reason.)
 
 **TASK:** Write the minimum code necessary to make the test pass. _Now_ it's necessary to write a loop, and read the next opcode from memory, and take different actions depending on its value. If we'd done this before, even though the tests didn't require it, we would have committed the sin of premature engineering.
 
 Once this test passes, we can do a little refactoring.
 
-**TASK:** Define integer constants `OpHALT` and `OpNOP`, with the values 0 and 1 respectively.
+**TASK:** Define integer constants `OpHALT` and `OpNOOP`, with the values 0 and 1 respectively.
 
-Refactor the tests and the `gmachine` package to use these constants (for example, in `TestNop`, we should set the contents of address zero to `OpNOP`, instead of a literal `1`.)
+Refactor the tests and the `gmachine` package to use these constants (for example, in `TestNOOP`, we should set the contents of address zero to `OpNOOP`, instead of a literal `1`.)
 
 Use the tests to make sure that your refactoring didn't break anything.
 
@@ -195,5 +195,9 @@ HALT
 Assuming we run it on a freshly-initialized machine, what will be the value of A afterwards? Easy, right? It would be inconvenient to do very complicated arithmetic this way, but the machine is perfectly capable of it in principle. Later, we'll add facilities to make this easier, but let's wrap up this section with a cool demonstration to show the team what you've been up to.
 
 **TASK:** Write a program in the G-machine language which calculates the result of subtracting 2 from 3. Write a test which executes this program and verifies the result.
+
+# 5: Thing
+
+Congratulations on a successful demo!
 
 <small>Gopher image by [egonelbre](https://github.com/egonelbre/gophers)</small>
