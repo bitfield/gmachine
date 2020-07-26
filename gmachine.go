@@ -11,6 +11,7 @@ const (
 	OpNOOP
 	OpINCA
 	OpDECA
+	OpSETA
 )
 
 // Machine represents an instance of the G-machine, with memory and register
@@ -40,6 +41,14 @@ func (g *Machine) Run() {
 			return
 		case OpINCA:
 			g.A++
+		case OpSETA:
+			g.A = g.Memory[g.P]
+			g.P++
 		}
 	}
+}
+
+func (g *Machine) RunProgram(program []uint64) {
+	copy(g.Memory, program)
+	g.Run()
 }

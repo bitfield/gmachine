@@ -29,56 +29,87 @@ func TestNew(t *testing.T) {
 }
 
 func TestHALT(t *testing.T) {
+	t.Parallel()
 	g := gmachine.New()
-	g.Run()
+	g.RunProgram([]uint64{
+		gmachine.OpHALT,
+	})
 	if g.P != 1 {
 		t.Errorf("want P == 1, got %d", g.P)
-	}
-	g.Run()
-	if g.P != 2 {
-		t.Errorf("want P == 2, got %d", g.P)
 	}
 }
 
 func TestNOOP(t *testing.T) {
+	t.Parallel()
 	g := gmachine.New()
-	g.Memory[0] = gmachine.OpNOOP
-	g.Run()
+	g.RunProgram([]uint64{
+		gmachine.OpNOOP,
+		gmachine.OpHALT,
+	})
 	if g.P != 2 {
 		t.Errorf("want P == 2, got %d", g.P)
 	}
 }
 
 func TestINCA(t *testing.T) {
+	t.Parallel()
 	g := gmachine.New()
-	g.Memory[0] = gmachine.OpINCA
-	g.Run()
+	g.RunProgram([]uint64{
+		gmachine.OpINCA,
+		gmachine.OpHALT,
+	})
 	if g.A != 1 {
 		t.Errorf("want A == 1, got %d", g.A)
 	}
 }
 
 func TestDECA(t *testing.T) {
+	t.Parallel()
 	g := gmachine.New()
 	g.A = 2
-	g.Memory[0] = gmachine.OpDECA
-	g.Run()
+	g.RunProgram([]uint64{
+		gmachine.OpDECA,
+		gmachine.OpHALT,
+	})
 	if g.A != 1 {
 		t.Errorf("want A == 1, got %d", g.A)
 	}
 }
 
-func TestSub3From2(t *testing.T) {
+func TestSETA(t *testing.T) {
+	t.Parallel()
 	g := gmachine.New()
-	copy(g.Memory, []uint64{
-		gmachine.OpINCA,
-		gmachine.OpINCA,
-		gmachine.OpINCA,
-		gmachine.OpDECA,
-		gmachine.OpDECA,
+	g.RunProgram([]uint64{
+		gmachine.OpSETA, 5,
+		gmachine.OpHALT,
 	})
-	g.Run()
-	if g.A != 1 {
-		t.Errorf("want A == 1, got %d", g.A)
+	if g.A != 5 {
+		t.Errorf("want A == 5, got %d", g.A)
+	}
+	if g.P != 3 {
+		t.Errorf("want P == 3, got %d", g.P)
+	}
+}
+
+func TestSub3(t *testing.T) {
+	t.Parallel()
+	tcs := []struct {
+		input, want uint64
+	}{
+		{input: 3, want: 1},
+		{input: 100, want: 98},
+		{input: 5, want: 3},
+	}
+	for _, tc := range tcs {
+		g := gmachine.New()
+		g.RunProgram([]uint64{
+			gmachine.OpSETA, tc.input,
+			gmachine.OpDECA,
+			gmachine.OpDECA,
+			gmachine.OpHALT,
+		})
+		if g.A != tc.want {
+			t.Errorf("want A == %d, got %d", tc.want, g.A)
+		}
 	}
 }
