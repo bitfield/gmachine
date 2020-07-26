@@ -28,7 +28,7 @@ func TestNew(t *testing.T) {
 	}
 }
 
-func TestHalt(t *testing.T) {
+func TestHALT(t *testing.T) {
 	g := gmachine.New()
 	g.Run()
 	if g.P != 1 {
@@ -40,16 +40,16 @@ func TestHalt(t *testing.T) {
 	}
 }
 
-func TestNop(t *testing.T) {
+func TestNOOP(t *testing.T) {
 	g := gmachine.New()
-	g.Memory[0] = gmachine.OpNOP
+	g.Memory[0] = gmachine.OpNOOP
 	g.Run()
 	if g.P != 2 {
 		t.Errorf("want P == 2, got %d", g.P)
 	}
 }
 
-func TestIncA(t *testing.T) {
+func TestINCA(t *testing.T) {
 	g := gmachine.New()
 	g.Memory[0] = gmachine.OpINCA
 	g.Run()
@@ -58,7 +58,7 @@ func TestIncA(t *testing.T) {
 	}
 }
 
-func TestDecA(t *testing.T) {
+func TestDECA(t *testing.T) {
 	g := gmachine.New()
 	g.A = 2
 	g.Memory[0] = gmachine.OpDECA

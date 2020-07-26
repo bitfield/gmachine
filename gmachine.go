@@ -8,7 +8,7 @@ const DefaultMemSize = 1024
 // Opcodes understood by the G-machine.
 const (
 	OpHALT = iota
-	OpNOP
+	OpNOOP
 	OpINCA
 	OpDECA
 )
