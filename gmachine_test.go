@@ -11,7 +11,7 @@ func TestNew(t *testing.T) {
 	wantMemSize := gmachine.DefaultMemSize
 	gotMemSize := len(g.Memory)
 	if wantMemSize != gotMemSize {
-		t.Errorf("want %d words of memory, got %d", gotMemSize, wantMemSize)
+		t.Errorf("want %d words of memory, got %d", wantMemSize, gotMemSize)
 	}
 	var wantP uint64 = 0
 	if wantP != g.P {
