@@ -6,7 +6,7 @@ Welcome to your first day as Vice-President of Virtual Processors! You will find
 
 Your first job is to begin the design of a new virtual CPU, called the _G-machine_. Don't worry, we'll be tackling this project in easy stages. Let's first set out what exactly is required.
 
-You will be developing a Go library which implements the G-machine. Users should be able to import your library and use it to write programs which run on the G-machine. We will develop a minimum viable product first, and gradually add more features as we go.
+You will be developing a Go package which implements the G-machine. Users should be able to import your package and use it to write programs which run on the G-machine. We will develop a minimum viable product first, and gradually add more features as we go.
 
 We will be using a simplified model of a computer system in which there are three main components:
 
