@@ -23,3 +23,13 @@ func TestNew(t *testing.T) {
 		t.Errorf("want last memory location to contain %d, got %d", wantMemValue, gotMemValue)
 	}
 }
+
+func TestHalt(t *testing.T) {
+	t.Parallel()
+	g := gmachine.New()
+	g.Run()
+	wantP := uint64(1)
+	if g.P != wantP {
+		t.Fatalf("want P == %d, got %d", wantP, g.P)
+	}
+}

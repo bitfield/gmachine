@@ -15,3 +15,7 @@ func New() Machine {
 		Memory: make([]uint64, DefaultMemSize),
 	}
 }
+
+func (g *Machine) Run() {
+	g.P = 1
+}
