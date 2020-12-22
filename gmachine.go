@@ -9,6 +9,7 @@ const (
 	OpHALT = iota
 	OpNOOP
 	OpINCA
+	OpDECA
 )
 
 type Machine struct{
@@ -33,6 +34,8 @@ func (g *Machine) Run() {
 		case OpNOOP:
 		case OpINCA:
 			g.A++
+		case OpDECA:
+			g.A--
 		}
 	}
 }
