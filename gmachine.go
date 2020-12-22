@@ -17,5 +17,13 @@ func New() Machine {
 }
 
 func (g *Machine) Run() {
-	g.P = 1
+	for {
+		op := g.Memory[g.P]
+		g.P++
+		switch op {
+		case 0:
+			return
+		case 1:
+		}
+	}
 }

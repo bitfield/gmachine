@@ -24,11 +24,22 @@ func TestNew(t *testing.T) {
 	}
 }
 
-func TestHalt(t *testing.T) {
+func TestHALT(t *testing.T) {
 	t.Parallel()
 	g := gmachine.New()
 	g.Run()
 	wantP := uint64(1)
+	if g.P != wantP {
+		t.Fatalf("want P == %d, got %d", wantP, g.P)
+	}
+}
+
+func TestNOOP(t *testing.T) {
+	t.Parallel()
+	g := gmachine.New()
+	g.Memory[0] = uint64(1)
+	g.Run()
+	wantP := uint64(2)
 	if g.P != wantP {
 		t.Fatalf("want P == %d, got %d", wantP, g.P)
 	}
