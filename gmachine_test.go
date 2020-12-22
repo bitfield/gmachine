@@ -86,3 +86,15 @@ func TestSubtraction(t *testing.T) {
 		t.Errorf("want A value %d, got %d", wantA, g.A)
 	}
 }
+
+func TestSETA(t *testing.T) {
+	t.Parallel()
+	g := gmachine.New()
+	g.Memory[0] = gmachine.OpSETA
+	g.Memory[1] = 5
+	g.Run()
+	wantA := uint64(5)
+	if wantA != g.A {
+		t.Errorf("want A value %d, got %d", wantA, g.A)
+	}
+}

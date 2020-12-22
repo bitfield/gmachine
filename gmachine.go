@@ -10,6 +10,7 @@ const (
 	OpNOOP
 	OpINCA
 	OpDECA
+	OpSETA
 )
 
 type Machine struct{
@@ -36,6 +37,9 @@ func (g *Machine) Run() {
 			g.A++
 		case OpDECA:
 			g.A--
+		case OpSETA:
+			g.A = g.Memory[g.P]
+			g.P++
 		}
 	}
 }
