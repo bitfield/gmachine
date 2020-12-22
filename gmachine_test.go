@@ -75,11 +75,10 @@ func TestDECA(t *testing.T) {
 func TestSubtraction(t *testing.T) {
 	t.Parallel()
 	g := gmachine.New()
-	g.Memory[0] = gmachine.OpINCA
-	g.Memory[1] = gmachine.OpINCA
-	g.Memory[2] = gmachine.OpINCA
+	g.Memory[0] = gmachine.OpSETA
+	g.Memory[1] = 3
+	g.Memory[2] = gmachine.OpDECA
 	g.Memory[3] = gmachine.OpDECA
-	g.Memory[4] = gmachine.OpDECA
 	g.Run()
 	wantA := uint64(1)
 	if wantA != g.A {
