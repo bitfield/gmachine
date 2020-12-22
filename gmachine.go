@@ -8,11 +8,13 @@ const DefaultMemSize = 1024
 const (
 	OpHALT = iota
 	OpNOOP
+	OpINCA
 )
 
 type Machine struct{
 	Memory []uint64
 	P uint64
+	A uint64
 }
 
 func New() Machine {
@@ -29,6 +31,8 @@ func (g *Machine) Run() {
 		case OpHALT:
 			return
 		case OpNOOP:
+		case OpINCA:
+			g.A++
 		}
 	}
 }

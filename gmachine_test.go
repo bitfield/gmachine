@@ -17,6 +17,10 @@ func TestNew(t *testing.T) {
 	if wantP != g.P {
 		t.Errorf("want initial P value %d, got %d", wantP, g.P)
 	}
+	var wantA uint64 = 0
+	if wantA != g.A {
+		t.Errorf("want initial A value %d, got %d", wantA, g.A)
+	}
 	var wantMemValue uint64 = 0
 	gotMemValue := g.Memory[gmachine.DefaultMemSize-1]
 	if wantMemValue != gotMemValue {
@@ -42,5 +46,16 @@ func TestNOOP(t *testing.T) {
 	wantP := uint64(2)
 	if g.P != wantP {
 		t.Fatalf("want P == %d, got %d", wantP, g.P)
+	}
+}
+
+func TestINCA(t *testing.T) {
+	t.Parallel()
+	g := gmachine.New()
+	g.Memory[0] = gmachine.OpINCA
+	g.Run()
+	wantA := uint64(1)
+	if wantA != g.A {
+		t.Errorf("want A value %d, got %d", wantA, g.A)
 	}
 }
