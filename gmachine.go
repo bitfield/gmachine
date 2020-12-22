@@ -5,6 +5,11 @@ package gmachine
 // allocated to a new G-machine by default.
 const DefaultMemSize = 1024
 
+const (
+	OpHALT = iota
+	OpNOOP
+)
+
 type Machine struct{
 	Memory []uint64
 	P uint64
@@ -21,9 +26,9 @@ func (g *Machine) Run() {
 		op := g.Memory[g.P]
 		g.P++
 		switch op {
-		case 0:
+		case OpHALT:
 			return
-		case 1:
+		case OpNOOP:
 		}
 	}
 }

@@ -37,7 +37,7 @@ func TestHALT(t *testing.T) {
 func TestNOOP(t *testing.T) {
 	t.Parallel()
 	g := gmachine.New()
-	g.Memory[0] = uint64(1)
+	g.Memory[0] = uint64(gmachine.OpNOOP)
 	g.Run()
 	wantP := uint64(2)
 	if g.P != wantP {
