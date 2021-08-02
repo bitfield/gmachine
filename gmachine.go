@@ -8,6 +8,7 @@ const HALT = 0
 const NOOP = 1
 const INCA = 2
 const DECA = 3
+const SETA = 4
 
 type GMachine struct {
 	A      uint64
@@ -24,16 +25,27 @@ func New() *GMachine {
 }
 
 func (g *GMachine) Run() {
-	for _, slot := range g.Memory {
+	for {
+		v := g.Memory[g.P]
 		g.P++
-		switch slot {
+		switch v {
 		case HALT:
 			return
 		case INCA:
 			g.A++
 		case DECA:
 			g.A--
+		case SETA:
+			g.A = g.Memory[g.P]
+			g.P++
 		}
 	}
 
+}
+
+func (g *GMachine) RunProgram(instructions []uint64) {
+	for i := range instructions {
+		g.Memory[i] = instructions[i]
+	}
+	g.Run()
 }
