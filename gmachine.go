@@ -162,8 +162,7 @@ func WriteWords(w io.Writer, data []Word) error {
 			byteValue := word / Word(placeValue)
 			total -= byteValue
 			placeValue /= 256
-			fmt.Println(byteValue)
-			fmt.Fprint(w, byteValue)
+			w.Write([]byte{byte(byteValue)})
 		}
 	}
 	return nil
