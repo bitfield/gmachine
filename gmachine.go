@@ -153,3 +153,18 @@ func ReadWords(r io.Reader) ([]Word, error) {
 	}
 	return words, nil
 }
+
+func WriteWords(w io.Writer, data []Word) error {
+	for _, word := range data {
+		placeValue := 72057594037927936
+		total := word
+		for i := 0; i <= 7; i++ {
+			byteValue := word / Word(placeValue)
+			total -= byteValue
+			placeValue /= 256
+			fmt.Println(byteValue)
+			fmt.Fprint(w, byteValue)
+		}
+	}
+	return nil
+}

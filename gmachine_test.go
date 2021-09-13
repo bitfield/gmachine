@@ -278,7 +278,7 @@ func TestRunProgramFromFile(t *testing.T) {
 
 func TestReadWords(t *testing.T) {
 	t.Parallel()
-	want := []gmachine.Word{gmachine.SETA, math.MaxUint64, gmachine.DECA}
+	want := []gmachine.Word{gmachine.SETA, 0, gmachine.DECA}
 	input := bytes.NewReader([]byte{
 		0, 0, 0, 0, 0, 0, 0, gmachine.SETA,
 		255, 255, 255, 255, 255, 255, 255, 255,
@@ -292,4 +292,24 @@ func TestReadWords(t *testing.T) {
 	if !cmp.Equal(want, got) {
 		t.Error(cmp.Diff(want, got))
 	}
+}
+
+func TestWriteWords(t *testing.T) {
+	t.Parallel()
+	input := []gmachine.Word{gmachine.SETA, math.MaxUint64, gmachine.DECA}
+	want := []byte{
+		0, 0, 0, 0, 0, 0, 0, gmachine.SETA,
+		0, 0, 0, 0, 0, 0, 0, 1,
+		0, 0, 0, 0, 0, 0, 0, gmachine.DECA,
+	}
+	output := &bytes.Buffer{}
+	err := gmachine.WriteWords(output, input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := output.Bytes()
+	if !cmp.Equal(want, got) {
+		t.Error(cmp.Diff(want, got))
+	}
+
 }
