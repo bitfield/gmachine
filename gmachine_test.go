@@ -195,7 +195,7 @@ func TestAssembleOperandInvalid(t *testing.T) {
 	input := []string{"SETA", "DECA"}
 	_, err := gmachine.Assemble(input)
 	if err == nil {
-		t.Error("Expecting error but found")
+		t.Error("Expecting error but not found")
 	}
 }
 
