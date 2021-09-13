@@ -155,6 +155,7 @@ func ReadWords(r io.Reader) ([]Word, error) {
 }
 
 func WriteWords(w io.Writer, data []Word) error {
+	byteValues := []byte{}
 	for _, word := range data {
 		placeValue := 72057594037927936
 		total := word
@@ -162,8 +163,9 @@ func WriteWords(w io.Writer, data []Word) error {
 			byteValue := word / Word(placeValue)
 			total -= byteValue
 			placeValue /= 256
-			w.Write([]byte{byte(byteValue)})
+			byteValues = append(byteValues, byte(byteValue))
 		}
 	}
+	w.Write(byteValues)
 	return nil
 }
