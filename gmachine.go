@@ -3,6 +3,7 @@ package gmachine
 
 import (
 	"bufio"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"io"
@@ -143,29 +144,17 @@ func ReadWords(r io.Reader) ([]Word, error) {
 		if err != nil {
 			return nil, err
 		}
-		total := 0
-		placeValue := 1
-		for i := len(rawBytes) - 1; i >= 0; i-- {
-			total += int(rawBytes[i]) * placeValue
-			placeValue *= 256
-		}
-		words = append(words, Word(total))
+		b := binary.BigEndian.Uint64(rawBytes)
+		words = append(words, Word(b))
 	}
 	return words, nil
 }
 
 func WriteWords(w io.Writer, data []Word) error {
-	byteValues := []byte{}
 	for _, word := range data {
-		placeValue := 72057594037927936
-		total := word
-		for i := 0; i <= 7; i++ {
-			byteValue := word / Word(placeValue)
-			total -= byteValue
-			placeValue /= 256
-			byteValues = append(byteValues, byte(byteValue))
-		}
+		rawBytes := make([]byte, 8)
+		binary.BigEndian.PutUint64(rawBytes[0:], uint64(word))
+		w.Write(rawBytes)
 	}
-	w.Write(byteValues)
 	return nil
 }
