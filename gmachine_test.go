@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"gmachine"
 	"math"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -205,7 +207,7 @@ func TestAssembleFromFile(t *testing.T) {
 	want := []gmachine.Word{gmachine.HALT}
 	got, err := gmachine.AssembleFromFile("testdata/local.gasm")
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	if !cmp.Equal(want, got) {
@@ -218,7 +220,7 @@ func TestAssembleFromFileSetA(t *testing.T) {
 
 	words, err := gmachine.AssembleFromFile("testdata/seta.gasm")
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 	g := gmachine.New()
 	g.RunProgram(words)
@@ -313,3 +315,25 @@ func TestWriteWords(t *testing.T) {
 	}
 
 }
+
+func TestAssembleToFile(t *testing.T) {
+	t.Parallel()
+	outPath := filepath.Join(t.TempDir(), "output.gbin")
+	wantPath := "testdata/local.gbin"
+	err := gmachine.AssembleFromFileToBinary("testdata/local.gasm", outPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want, err := os.ReadFile(wantPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := os.ReadFile(outPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !cmp.Equal(want, got) {
+		t.Error(cmp.Diff(want, got))
+	}
+}
+

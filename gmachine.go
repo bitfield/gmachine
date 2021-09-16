@@ -124,6 +124,19 @@ func AssembleFromFile(path string) ([]Word, error) {
 	return words, nil
 }
 
+func AssembleFromFileToBinary(inPath, outPath string) error {
+	data, err := AssembleFromFile(inPath)
+	if err != nil {
+		return err
+	}
+	outFile, err := os.Create(outPath)
+	if err != nil {
+		return err
+	}
+	defer outFile.Close()
+	return WriteWords(outFile, data)
+}
+
 func (g *GMachine) RunProgramFromReader(r io.Reader) error {
 	words, err := ReadWords(r)
 	if err != nil {
@@ -153,7 +166,7 @@ func ReadWords(r io.Reader) ([]Word, error) {
 func WriteWords(w io.Writer, data []Word) error {
 	for _, word := range data {
 		rawBytes := make([]byte, 8)
-		binary.BigEndian.PutUint64(rawBytes[0:], uint64(word))
+		binary.BigEndian.PutUint64(rawBytes, uint64(word))
 		w.Write(rawBytes)
 	}
 	return nil
