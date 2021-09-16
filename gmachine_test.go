@@ -253,7 +253,7 @@ func TestAssembleFromFileSetADeca(t *testing.T) {
 	}
 }
 
-func TestRunProgramFromFile(t *testing.T) {
+func TestRunProgramFromReader(t *testing.T) {
 	t.Parallel()
 	// SETA 258
 	// DECA
@@ -318,9 +318,9 @@ func TestWriteWords(t *testing.T) {
 
 func TestAssembleToFile(t *testing.T) {
 	t.Parallel()
-	outPath := filepath.Join(t.TempDir(), "output.gbin")
-	wantPath := "testdata/local.gbin"
-	err := gmachine.AssembleFromFileToBinary("testdata/local.gasm", outPath)
+	outPath := filepath.Join(t.TempDir(), "setadeca.gbin")
+	wantPath := "testdata/setadeca.gbin"
+	err := gmachine.AssembleFromFileToBinary("testdata/setadeca.gasm", outPath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -334,6 +334,19 @@ func TestAssembleToFile(t *testing.T) {
 	}
 	if !cmp.Equal(want, got) {
 		t.Error(cmp.Diff(want, got))
+	}
+}
+
+func TestExecuteBinary(t *testing.T) {
+	t.Parallel()
+	g := gmachine.New()
+	err := g.ExecuteBinary("testdata/setadeca.gbin")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var wantA gmachine.Word = 3
+	if wantA != g.A {
+		t.Errorf("want initial A value %d, got %d", wantA, g.A)
 	}
 }
 

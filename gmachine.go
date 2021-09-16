@@ -78,6 +78,15 @@ func (g *GMachine) RunProgram(instructions []Word) {
 	g.Run()
 }
 
+func (g *GMachine) ExecuteBinary(binPath string) error {
+	binFile, err := os.Open(binPath)
+	if err != nil {
+		return err
+	}
+	defer binFile.Close()
+	return g.RunProgramFromReader(binFile)
+}
+
 func Assemble(code []string) ([]Word, error) {
 	words := []Word{}
 	for pos := 0; pos < len(code); pos++ {
