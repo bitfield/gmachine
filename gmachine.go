@@ -180,3 +180,8 @@ func WriteWords(w io.Writer, data []Word) error {
 	}
 	return nil
 }
+
+func RunCLI(path string) error {
+	g := New()
+	return g.ExecuteBinary(path)
+}
