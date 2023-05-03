@@ -16,16 +16,13 @@ We will be using a simplified model of a computer system in which there are thre
 
 At any given moment, the G-machine has a certain _state_: the contents of its registers, plus the contents of its memory.
 
-The first thing users need to be able to do is to create a new G-machine they can use. So you'll be implementing a `gmachine.New()` function that returns a G-machine in its default initial state, which is:
-
-* A 64-bit register named P, containing zero
-* 1024 64-bit _words_ (that is, locations) of memory, containing all zeroes
+The first thing users need to be able to do is to create a new G-machine they can use. So you'll be implementing a `gmachine.New()` function that returns a G-machine in its default initial state, which is specified by a test.
 
 The test is already written for you, in the file [gmachine_test.go](gmachine_test.go), so let's get started!
 
 **TASK:** Write the minimum code to make the test pass. Use the [gmachine.go](gmachine.go) file which has been started for you.
 
-(Hint: create a `struct` type to represent the G-machine, with a `uint64` field representing the P register, and a `[]uint64` field representing the memory. Make sure to initialize this slice to the required length, or the test will fail. The `New()` function should return a pointer to this `struct` type.)
+You'll need to define a few things first just to get the test to even compile. Once you've done that, see if you can add the minimum extra code necessary to make it pass.
 
 When the test passes, go on to the next section.
 
@@ -270,5 +267,70 @@ if g.P != 2 {
 Rewrite `TestNOOP()` to use `RunProgram()`, and make sure it still passes.
 
 **TASK:** Refactor all the existing tests to use `RunProgram()`.
+
+## Going further
+
+Congratulations, you've designed and built your own computer system! Now it's up to you what you choose to add to it.
+
+Some ideas:
+
+* More instructions. Think of a program you'd like to write (for example, one that prints “Hello, world”) and imagine the instructions necessary to write it concisely. Then implement them.
+
+* Support for a *stack* so that programmers can store temporary values (for example, intermediate results during a calculation). It's up to you what this would look like, but you could use instructions such as `PSHA` and `POPA` to “push” the current value of `A` to the stack, or “pop” (that is, retrieve the value at the top of the stack and move it into `A`).
+
+* Support for *subroutines*, so that commonly-used code doesn't have to be repeated everywhere it's needed. Instead, a program could `JUMP` to a specific memory address where the required subroutine lives, and when that subroutine executes the `RTRN` instruction, the calling program would be resumed at the next instruction following the `JUMP`. (You could use the stack to store this return address, but that's up to you.)
+
+* An *assembler* that can read source files in the G-language and translate them into a binary format that a G-machine can run. For example, it could accept a program like this:
+
+    ```
+    INCA
+    HALT
+    ```
+
+    and produce the corresponding sequence of opcodes as a `[]Word`.
+
+* Support in the assembler for defining *constants* (values that can be referred to by a symbolic name). For example, you could write a program that defines a constant π and uses it like this:
+
+    ```
+    CONS π 3.141592653589793
+    ...
+    SETA π
+    ```
+
+* Support for *variables* (memory locations that can be referred to by a symbolic name). For example, you could write a program that calculates a value and stores it in the variable `RESULT`:
+
+    ```
+    VARB RESULT
+    ...
+    SETA 0
+    INCA
+    INCA
+    MOVE A -> RESULT
+    ```
+
+* A tool to produce *executable binaries* for your operating system from G-code programs. For example, it could take a source file like the example above and produce a macOS (or Linux, or Windows) binary that runs the corresponding program.
+
+* A simple *BIOS* (Basic Input/Output System) for the G-machine that lets programmers read and write characters from the terminal. For example, you might use it to print “Hello, world”. If you have subroutines, you could use them to provide a number of built-in utility functions, such as `WRITE` and `READ`.
+
+* A way of writing *tests* for G-code programs in the G-language itself. For example, you could invent an `ASRT` instruction that lets you write a test like this:
+
+    ```
+    ; Test that INCA increments the accumulator by 1
+    SETA 0
+    ASRT 0 ; Fail if A != 0
+    INCA
+    ASRT 1 ; Fail if A != 1
+    ```
+
+* A *monitor* (also known as a *debugger*) that gives you insight into the behaviour of running G-machine programs. For example, it would be useful to have a way to add a *breakpoint* at a specific place in the program, so that when the machine reaches it, it pauses execution and shows you the current state of its registers.
+
+    It would also be neat to be able to single-step through the program, one instruction at a time, or set it running again until it reaches the next breakpoint.
+
+    If the machine ever encounters an illegal instruction or some other runtime error, it could automatically drop into monitor mode so that the programmer can fix the issue.
+
+* A *multiprocessing* operating system scheduler that makes a G-machine able to run several programs concurrently. (Not necessarily in parallel; for example, the scheduler could give each running process a fixed time slice on the single CPU “core” in turn.)
+
+* A *parallel processing* architecture with multiple G-machine “cores” available. This will need an improvement to the scheduler to allow it to distribute processes efficiently across cores.
+
 
 <small>Gopher image by [egonelbre](https://github.com/egonelbre/gophers)</small>
