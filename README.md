@@ -8,23 +8,20 @@ Your first job is to begin the design of a new virtual CPU, called the _G-machin
 
 You will be developing a Go package which implements the G-machine. Users should be able to import your package and use it to write programs which run on the G-machine. We will develop a minimum viable product first, and gradually add more features as we go.
 
-We will be using a simplified model of a computer system in which there are three main components:
+We will be using a simplified model of a computer system in which there are two main components:
 
-* A _CPU_ (Central Processing Unit) which executes instructions in sequence and has _registers_ which store data while it's being processed
-* A _memory_ space where the CPU can move data to or from its registers
-* A _BIOS_ (Basic Input/Output System) which provides communications facilities like reading or writing to a terminal
+* A **CPU** (Central Processing Unit) which executes instructions in sequence and has **registers** which hold data while it's being processed.
+* A **memory** where we can store data and programs.
 
-At any given moment, the G-machine has a certain _state_: the contents of its registers, plus the contents of its memory.
+At any given moment, the G-machine has a certain **state**: the contents of the CPU's registers, and the contents of its memory.
 
-The first thing users need to be able to do is to create a new G-machine they can use. So you'll be implementing a `gmachine.New()` function that returns a G-machine in its default initial state, which is specified by a test.
+A computer has to deal with data in fixed-size chunks, and the usual chunk size is called a **byte**. So each register stores one byte of data, and the memory is a sequence of bytes, each with its own unique *address* (which is also a byte).
 
-The test is already written for you, in the file [gmachine_test.go](gmachine_test.go), so let's get started!
+The first thing users need to be able to do is to create a new G-machine they can use. So there's a `gmachine.New()` function that returns a G-machine in its default initial state, which is specified by a test.
 
-**TASK:** Write the minimum code to make the test pass. Use the [gmachine.go](gmachine.go) file which has been started for you.
+The test is in the file [`gmachine_test.go`](gmachine_test.go), and the `New` function is already implemented in the [`gmachine.go`](gmachine.go) file, so your first challenge is a straightforward one:
 
-You'll need to define a few things first just to get the test to even compile. Once you've done that, see if you can add the minimum extra code necessary to make it pass.
-
-When the test passes, go on to the next section.
+**TASK:** Run the test and make sure it passes.
 
 # 2: Halt and Catch Fire
 
@@ -33,7 +30,7 @@ When the test passes, go on to the next section.
 Hey, just FYI, we ran your draft G-machine design past the executive steering committee, and they loved it! Of course it's early days, but I'm sure this is going to be our next killer product. Let's start filling in some of the details.
 
 ## The fetch-execute cycle
-The next feature we'll need in our virtual CPU is what's called the _fetch-execute cycle_. Essentially all computers work this way:
+The next feature we'll need in our virtual CPU is what's called the **fetch-execute cycle**. Essentially all computers work this way:
 
 1. Fetch the next instruction from memory
 2. Execute it.
@@ -41,100 +38,106 @@ The next feature we'll need in our virtual CPU is what's called the _fetch-execu
 
 ## The program counter
 
-Saying 'the _next_ instruction' implies that we have some way of remembering where we currently 'are' in memory. That is to say, we need a _register_ on the G-machine which holds the memory address of the next instruction to execute. This is what the P register is for ('P' stands for 'Program Counter', which is the traditional name for this register).
+Saying 'the **next** instruction' implies that we have some way of remembering where we currently 'are' in memory. That is to say, we need a CPU register that holds the memory address of the next instruction to execute. 
+
+This is what the `pc` register is for (PC stands for 'Program Counter', which is the traditional name for this register). It keeps track of where the CPU is in the program.
 
 ## Instructions
 
-We also need some concept of what an 'instruction' is. You probably know that _machine language_ is the name we give to the set of instructions which a given CPU can understand. For example, the x86_64 processor understands x86_64 machine language. This is the CPU's 'native' language, if you like. If you write a program in machine language, you can run it directly on the processor. Programs in other languages need to be translated (_compiled_) into the right machine language for the CPU you want to run them on.
+You probably know that **machine language** is the name we give to the set of instructions which a given CPU can understand. For example, the x86_64 processor understands x86_64 machine language. This is the CPU's 'native' language, if you like. If you write a program in machine language, you can run it directly on the processor. Programs in other languages need to be translated (**compiled**) into the right machine language for the CPU you want to run them on.
 
 ## Opcodes
 
-Each instruction is represented by a numeric code, called an _opcode_, where each number 0, 1, 2... represents a distinct instruction. A program for the G-machine consists of a sequence of opcodes, perhaps with some accompanying data.
+Each instruction is represented by a numeric code, called an **opcode**, where each number 0, 1, 2... represents a distinct instruction. A program for the G-machine consists of a sequence of opcodes, perhaps with some accompanying data.
 
-We can imagine a variety of useful instructions which the G-machine might implement: for example, if we want to do arithmetic, we might need something like an ADD instruction.
+We can imagine a variety of useful instructions which the G-machine might implement: for example, if we want to do arithmetic, we might need something like an `add` instruction.
 
-## The HALT instruction
+## The `halt` instruction
 
-For now, let's keep it simple, and implement a single instruction named `HALT`, which does nothing except stop the machine. It's entirely up to us which numeric values to assign to opcodes, and it makes no difference to the machine, but for simplicity let's assign `HALT` the opcode 0.
+For now, let's keep it simple, and implement a single instruction named `halt`, which does nothing except stop the machine. It's entirely up to us which numeric values to assign to opcodes, and it makes no difference to the machine as long as each opcode uniquely identifies an instruction. For simplicity, let's assign `halt` the opcode 0. You don't need to write any code for this for now, just remember that opcode 0 represents `halt`.
 
 ## The `Run()` method
 
-We'll need a way for users to start the machine running, which is to say performing the fetch-execute cycle, until it's either told to stop, or runs into some kind of error. So let's provide a method on the `Machine` object named `Run()` to do this.
+Now that we have an instruction, we have something for the machine to do: execute it!
+
+We'll need a way for users to start the machine running, which is to say performing the fetch-execute cycle, until it's either told to stop, or runs into some kind of error. So there's a method on the `Machine` object named `Run()` that will do this.
 
 What would happen if we were to call the `Run()` method to start a new machine running, given that its memory and registers contain all zeroes? Well, let's follow the fetch-execute cycle:
 
-1. Fetch the next instruction from memory. That is to say, look at the P register to see what memory address it contains, and read the instruction at that address.
-2. Since the P register contains zero, we read the instruction at address zero, which is zero.
-3. We increment the P register so that it points to the next memory address to read from (in this case, 1).
-4. Execute the current instruction, whose opcode is zero. This is the opcode for the `HALT` instruction, so instead of jumping back to step 1, the `Run()` method should return instead.
+1. Fetch the next instruction from memory. That is to say, look at the `pc` register to see what memory address it contains, and read the instruction at that address.
+2. Since the `pc` register contains zero, we read the byte at address zero, which is zero.
+3. We increment the `pc` register so that it points to the next memory address to read from (in this case, 1).
+4. Execute the current instruction, whose opcode is 0. We know this is the opcode for the `halt` instruction, so instead of jumping back to step 1, the `Run()` method should return instead.
 
-So the upshot of all this is that if you call `Run()` on a new machine, it should return almost immediately (because it read and executed the `HALT` instruction), and the state of the machine should be unchanged except that the P register now contains the value `1`.
+So the upshot of all this is that if you call `Run()` on a new machine, it should return almost immediately (because it read and executed the `halt` instruction), and the state of the machine should be unchanged except that the `pc` register now contains the value 1, because we incremented it previously.
 
 Let's find out!
 
-**TASK:** Write a test function `TestHALT` which does the following:
+**TASK:** Uncomment the test function `TestHalt`, which does the following:
 
 1. Creates a new G-machine.
 2. Calls `Run()` on the machine.
-3. Tests that the machine's `P` register contains the value `1`. If not, the test should fail with a message like `"want P == 1, got ..."`
+3. Tests that the machine's `pc` register contains the value 1. If not, the test should fail with a message like `"want pc == 1, got ..."`
 
-This test will not compile yet, of course, because we haven't written the `Run()` method. If it fails to compile for any other reason, keep working on it until it fails to compile because of the missing `Run()` method.
+This test will not pass yet, because the `Run()` method currently does nothing. Over to you to fix that!
 
-**TASK:** Write the _minimum_ code necessary to make the test pass. (I'm serious about this. For example, even though we talked about a fetch-execute _cycle_, you won't need to implement a loop inside the `Run()` method, because the test doesn't require it to loop. All it needs to do is increment the P register and return.)
+**TASK:** Write the _minimum_ code necessary to make the new test pass. (I'm serious about this. For example, even though we talked about a fetch-execute _cycle_, you won't need to implement a loop inside the `Run()` method, because the test doesn't require it to loop. All it needs to do is increment the `pc` register and return.)
 
-When you have the tests passing, go on to the next section.
+When you have both tests passing, go on to the next section.
 
 # 3: Busy Doing Nothing
 
 ![](img/gamer.png)
 
-Great job on implementing the `HALT` instruction! We now have a _programmable_ computer system, even though the programs we can write are rather simple. This is the minimal valid G-machine program:
+Great job on implementing the `halt` instruction! We now have a _programmable_ computer system, even though the programs we can write are rather simple. This is the minimal valid G-machine program:
 
-```
-HALT
+```asm
+halt
 ```
 
-In fact, that's also the _maximal_ program right now, since while we can write longer programs by repeating the `HALT` instruction, the extra instructions have no effect.
+In fact, that's also the _maximal_ program right now, since while we can write longer programs by repeating the `halt` instruction, the extra instructions have no effect.
 
 We ran your prototype by the Marketing group, and the feedback was generally positive, but they asked if you couldn't add at least one more instruction, so that we can write and sell useful software for the machine.
 
-## The NOOP instruction
+## The `nop` instruction
 
-The next instruction to implement will be `NOOP`, short for "NO OPeration", which does nothing. This might sound a bit similar to the `HALT` instruction, which does nothing and halts, but there _is_ a difference: the `NOOP` instruction doesn't halt! Let's assign it opcode 1.
+The next instruction to implement will be `nop` (short for “No OPeration”), which does nothing. This might sound a bit similar to the `halt` instruction, which does nothing and halts, but there _is_ a difference: the `nop` instruction doesn't halt! Let's assign it opcode 1.
 
-So let's do another thought experiment. What happens if we write the opcode for the `NOOP` instruction into memory address zero, and start the machine? (Think about it before you read on.)
+So let's do another thought experiment. What happens if we write the opcode for the `nop` instruction into memory address zero, and start the machine? (Think about it before you read on.)
 
-Well, we know P starts at zero, so the first thing the machine will do is read the instruction at address zero, which is `NOOP`. Since this has no effect, the fetch-execute cycle will continue, and the machine will fetch the instruction at address 1, which is `HALT`. And the machine should stop, with the program counter P containing the value `2`.
+Well, we know `pc` starts at zero, so the first thing the machine will do is read the instruction at address zero, which is `nop`. Since this has no effect, the fetch-execute cycle will continue, and the machine will fetch the instruction at address 1, which is `halt`. And the machine should stop, with `pc` containing the value `2`.
 
 To put it another, equivalent, way, we're submitting the following program to the machine:
 
 ```
-NOOP
-HALT
+nop
+halt
 ```
 
 Let's make it work!
 
-**TASK:** Write a test function `TestNOOP` which does the following:
+**TASK:** Write a test function `TestNop` (you can copy and adapt `TestHalt` if you like) along these lines:
 
 1. Creates a new G-machine.
-2. Sets the contents of the first memory location to 1.
+2. Sets the contents of the first memory location to 1 (the opcode for `nop`).
 3. Calls `Run()` on the machine.
 4. Tests that the machine's `P` register contains the value `2`. If not, the test should fail with a message like `"want P == 2, got ..."`
 
-The test should fail, we expect, because we haven't yet implemented the `NOOP` instruction. If we've strictly obeyed the test-driven development process, we haven't even implemented a loop in the `Run()` method, or read any instructions from memory, because we didn't need to until now. So the test should fail because P contains `1` instead of `2`. (If it fails for any other reason, keep working, until it fails for that reason.)
+The test should fail, we expect, because we haven't yet implemented the `nop` instruction. If we've strictly obeyed the test-driven development process, we haven't even implemented a loop in the `Run()` method, or read any instructions from memory, because we didn't need to until now. So the test should fail because `pc` contains 1 instead of 2.
 
-**TASK:** Write the minimum code necessary to make the test pass. _Now_ it's necessary to write a loop, and read the next opcode from memory, and take different actions depending on its value. If we'd done this before, even though the tests didn't require it, we would have committed the sin of premature engineering.
+**TASK:** Write the minimum code necessary to make the test pass. _Now_ it's necessary to write a loop, and read the next opcode from memory, and take different actions depending on its value (hint: you could use a `switch` statement for this).
+
+Remember, opcode 0 is `halt`, and opcode 1 is `nop`.
 
 ## Opcode constants
 
 Once this test passes, we can do a little refactoring.
 
-**TASK:** Define integer constants `OpHALT` and `OpNOOP`, with the values 0 and 1 respectively.
+**TASK:** Define a new integer constant `NOP` with the value 1. You'll find there's already a constant `HALT` with the value 0, so you can put `NOP` next to it.
 
-Refactor the tests and the `gmachine` package to use these constants (for example, in `TestNOOP`, we should set the contents of address zero to `OpNOOP`, instead of a literal `1`.)
+Refactor the tests and the `gmachine` package to use these constants (for example, in `TestNop`, we should set the contents of address zero to the named constant `NOP`, instead of a literal `1`.)
 
-Use the tests to make sure that your refactoring didn't break anything.
+Use the tests to make sure that your refactoring didn't break anything. Check that you also used the constants in your `switch` statement. If you like, change the values of the two constants to something different (99 and 100, say) and make sure that everything still passes (it should).
 
 When you're happy with the code, move on to the next section.
 
@@ -144,54 +147,58 @@ When you're happy with the code, move on to the next section.
 
 You're doing great! Thanks to you, we have a working virtual processor, and the foundations of an excellent Go library—with tests!
 
-It's time to start adding some more functionality to the G-machine. To truly be a _computer_, we need it to be able to _compute_, that is, to calculate. Let's start by adding a new register for this purpose: the A register.
+It's time to start adding some more functionality to the G-machine. To truly be a _computer_, we need it to be able to _compute_, that is, to calculate. Let's start by adding a new register for this purpose: the `a` register.
 
-## The A register
+## The `a` register
 
 If you think about it, when we're doing some kind of arithmetic, like adding up a list of numbers, we have some concept of 'the current result'. On an electronic calculator, there's a display that shows the number 0 when you turn it on. If you press the `+` key, enter the value `1`, and press the `=` key, the display will show the value `1` (if your calculator is working correctly).
 
-That's the 'current result', and you can keep on adding, subtracting, multiplying, and so on, and at the end of the calculation that result will be the answer. We can imagine a CPU register that plays a similar role; think of it as a kind of scratchpad where you can store intermediate results during a calculation. The technical name is the _accumulator_, but let's call our register `A` for short.
+That's the 'current result', and you can keep on adding, subtracting, multiplying, and so on, and at the end of the calculation that result will be the answer. We can imagine a CPU register that plays a similar role; think of it as a kind of scratchpad where you can store intermediate results during a calculation. The technical name is the **accumulator**, but let's call our register `a` for short.
 
-**TASK:** Modify `TestNew` to expect the G-machine to have a `uint64` register named A, just like the existing P register, and verify that its initial value is zero. Implement this so that the test passes.
+**TASK:** Modify `TestNew` to expect the G-machine to have a register named `a`, just like the existing `pc` register, and verify that its initial value is zero. Implement this so that the test passes.
 
 ## Increment and decrement instructions
 
-We'll need to be able to modify the contents of this register, and the simplest way to do that is to _increment_ (add one to) or _decrement_ (subtract one from) it. Let's add some new instructions to do that:
+We'll need to be able to modify the contents of this register, and the simplest way to do that is to **increment** (add one to) or **decrement** (subtract one from) it. Let's add some new instructions to do that:
 
-* `INCA`
-* `DECA`
+* `inc a`
+* `dec a`
 
-**TASK:** Add a new test `TestINCA`. The test should do the following:
+**TASK:** Add a new test `TestIncA`. The test should do the following:
 
 1. Create a new G-machine.
-2. Set the first memory location to the instruction `INCA`.
+2. Set the first memory location to the instruction `inc a`.
 3. Run the machine.
-4. Verify that the A register's value is `1`.
+4. Verify that the `a` register's value is now `1` (don't worry about testing `pc` too; we already know that works).
 
 Remember, we need to see the test fail the right way before we start implementing the code necessary to make it pass. Assuming the test is correct, what will be the result of running it without that implementation? Figure this out for yourself before actually running the test. If the test produces the result you expect, we can have some confidence that it's correct.
 
-**TASK:** Implement the `INCA` instruction so that your test passes.
+**TASK:** Implement the `inc a` instruction so that your test passes.
 
-**TASK:** Add a corresponding test for the `DECA` instruction, that first of all sets the A register to the value `2`, then executes a `DECA` instruction, and verifies that the result is `1`. Implement the `DECA` instruction so that the test passes.
+**TASK:** Add a corresponding test for the `dec a` instruction, that first of all sets the `a` register to the value `2`, then executes a `dec a` instruction, and verifies that the result is `1`. Implement the `dec a` instruction so that the test passes.
 
 ## Doing calculations
 
 We now have a machine with basic arithmetic facilities! They might seem rather limited, but there's a lot we can do even with only increment and decrement instructions.
 
-For example, we can set the A register to any value we want, just by executing a long enough sequence of `INCA` instructions. We've already set the A register to the value 1 in our test, by incrementing it one time from its initial value of zero.
+For example, we can set the `a` register to any value we want, just by executing a long enough sequence of `inc a` instructions. We've already set the `a` register to the value 1 in our test, by incrementing it one time from its initial value of zero.
 
-Consider this program:
+Consider this program in the little language we've designed for the G-machine:
 
 ```
-INCA
-INCA
-INCA
-HALT
+inc a
+inc a
+inc a
+halt
 ```
 
-Assuming we run it on a freshly-initialized machine, what will be the value of A afterwards? Easy, right? It would be inconvenient to do very complicated arithmetic this way, but the machine is perfectly capable of it in principle. Later, we'll add facilities to make this easier, but let's wrap up this section with a cool demonstration to show the team what you've been up to.
+By the way, a symbolic language like this where each line corresponds to a machine-code instruction is called an **assembly language**. Each CPU has its own assembly language, and this is the G-machine's.
 
-**TASK:** Write a program in the G-machine language which calculates the result of subtracting 2 from 3. Write a test which executes this program and verifies the result.
+So what does this program do? Assuming we run it on a freshly-initialized machine, what will be the value of `a` afterwards? Easy, right? It should be 3.
+
+It would be inconvenient to do very complicated arithmetic this way, but the machine is perfectly capable of it in principle. Later, we'll add facilities to make this easier, but let's wrap up this section with a cool demonstration to show the team what you've been up to.
+
+**TASK:** Write a program in the G-machine assembly language which calculates the result of subtracting 2 from 3. You don't need any new instructions; just use the ones you already have in the right way to get the effect of setting `a` to 3, and then decrementing it twice. Write a test which executes this program and checks the result.
 
 # 5: Think of a Number
 
@@ -199,49 +206,55 @@ Assuming we run it on a freshly-initialized machine, what will be the value of A
 
 Congratulations on a successful demo! Even though the G-machine's architecture is extremely simple, and right now it only has a few instructions, it's capable of solving a wide range of arithmetic problems.
 
-Let's expand that capability now by adding a powerful new feature: _operands_.
+Let's expand that capability now by adding a powerful new feature: **operands**.
 
 ## Operands
 
-Right now we can set the A register to any value we want by executing the `INCA` instruction enough times. But, if you think about it, this means that in order to change the 'input value', we need to rewrite the program. That's a little inconvenient; we would like to be able to ship programs to customers which can operate on _arbitrary_ data.
+Right now we can set the `a` register to any value we want by executing the `inc a` instruction enough times. But, if you think about it, this means that in order to change the 'input value', we need to rewrite the program. That's a little inconvenient; we would like to be able to ship programs to customers which can operate on _arbitrary_ data.
 
 For example, consider your 'subtract 2' program. It can only operate on the value 3, and in order to subtract 2 from anything else, we have to alter the program. How can we write a 'subtract 2 from any number' program? Or, for that matter, a 'subtract any number from any number' program?
 
-To do that, we need some concept of _data_. That is to say, treating a number stored in memory not as an opcode signifying a machine instruction, but merely as a number. Suppose we were able to write an instruction like:
+To do that, we need some concept of **data**. That is to say, treating a number stored in memory not as an opcode signifying a machine instruction, but merely as a number. In order to do something useful with a value in memory like this, the first thing we'll want to do is **load** it into a register (`a`, for example).
+
+Suppose we were able to write an instruction that means “load `a` with the value 5”. It might look like this in our assembly language:
 
 ```
-SETA 5
+ld a, 5
 ```
 
-The effect of this instruction would be to set the A register to the value 5 (or any value we choose). How would this work?
+Here, `ld a` is a **mnemonic** (that's what we call the human-readable symbolic name for a machine instruction) meaning “load `a` with...” whatever value follows.
 
-We know how to define new instructions; we've done that a few times already. Adding a new opcode for `SETA` is no problem. But there's something new here: this opcode requires an _operand_, meaning a value to operate on. This value will, naturally, be stored in memory.
+The effect of this instruction would be to set the `a` register to the value 5 (and we could of course substitute any other value we choose). How would this work?
+
+We know how to define new instructions; we've done that a few times already. Adding a new opcode for `ld a` is no problem. But there's something new here: this opcode requires an operand: a value to operate on. This value will, naturally, be stored in memory.
 
 How could we incorporate this idea into our existing G-machine architecture? Think about it a little before you read on.
 
 ## Implementing operands
 
-One way we could do this is to have the `SETA` instruction trigger a memory _fetch_, just like we fetch the next instruction as part of the fetch-execute cycle. So as part of the implementation for the `SETA` opcode, we could read the contents of memory pointed to by the P register, and put that value into the A register. (We'll need to increment P after this, too, or we won't be able to fetch the next instruction correctly.)
+One way we could do this is to have the `ld a` instruction trigger a memory fetch, just like we fetch the next instruction as part of the fetch-execute cycle. 
 
-**TASK:** Write a test for the `SETA` instruction, and make it pass. It should not only verify the contents of the A register, but also that the P register is correctly updated following the data fetch.
+So as part of the implementation for the `ld a` opcode, we could read the contents of memory pointed to by the `pc` register, and put that value into the `a` register. (We'll need to increment `pc` after this, too, or we won't be able to fetch the next instruction correctly.)
+
+**TASK:** Write a test for the `ld a` instruction, and make it pass. It should not only verify the contents of the `a` register, but also that the `pc` register is correctly updated following the data fetch.
 
 ## Programs on arbitrary data
 
 Excellent! This is an important new capability for the G-machine: we can now write programs that operate on arbitrary stored data. In fact, we can rewrite the 'subtract 2 from 3' program using this feature.
 
-**TASK:** Rewrite your test for the 'subtract 2 from 3' program so that it executes and verifies the following G-code:
+**TASK:** Rewrite your test for the 'subtract 2 from 3' program so that it executes and verifies the following assembly language program instead:
 
 ```
-SETA 3
-DECA
-DECA
+ld a, 3
+dec a
+dec a
 ```
 
-Although this looks very similar to the previous implementation, there's an important difference. The starting value of A is controlled not by the program instructions, but by the contents of memory location 1 (that is, the second memory location).
+Although this looks very similar to the previous implementation, there's an important difference. The starting value of `a` is controlled not by the program instructions, but by the contents of memory location 1 (that is, the second memory location).
 
 This means we can provide different 'inputs' to this program by writing to that memory location.
 
-**TASK:** Expand your test for the 'subtract 2' program to test three different starting values of A, by writing them to the appropriate memory location and rerunning the machine. You will need to reset the P register to zero each time you update the input value, before you call `Run()`.
+**TASK:** Expand your test for the 'subtract 2' program to test three different starting values of `a`, by writing them to the appropriate memory location and rerunning the machine. You will need to reset the `pc` register to zero each time you update the input value, before you call `Run()`.
 
 ## Running programs
 
@@ -249,88 +262,66 @@ Nice work! We have some enterprise customers with a pressing need to subtract 2 
 
 You've earned a little refactoring, so let's add a facility which will make it easier to write new tests (and, indeed, programs in general). Instead of having to store our test programs and data into the G-machine's memory and then call `Run()`, let's provide a convenience method which takes a program and runs it for us.
 
-**TASK:** Add a method on the G-machine called `RunProgram()` which takes a G-code program, stores it into the machine's memory, and executes it.
+**TASK:** Add a method on the G-machine called `RunProgram()` which takes a slice of bytes representing a program, stores it into the machine's memory, and executes it.
 
-For example, if we wanted to rewrite our original `TestNOOP` test to use `RunProgram()`, we might write it something like this:
+For example, if we wanted to rewrite our original `TestNop` test to use `RunProgram()`, we might write it something like this:
 
 ```go
 g := gmachine.New()
-g.RunProgram([]uint64{
-    gmachine.OpNOOP,
-    gmachine.OpHALT,
+g.RunProgram([]byte{
+    gmachine.NOP,
+    gmachine.HALT,
 })
-if g.P != 2 {
-    t.Errorf("want P == 2, got %d", g.P)
+if g.CPU.PC != 2 {
+    t.Errorf("want pc == 2, got %d", g.CPU.PC)
 }
 ```
 
-Rewrite `TestNOOP()` to use `RunProgram()`, and make sure it still passes.
+Rewrite `TestNop()` to use `RunProgram()`, and make sure it still passes.
 
 **TASK:** Refactor all the existing tests to use `RunProgram()`.
 
-## Going further
+## Next steps
 
 Congratulations, you've designed and built your own computer system! Now it's up to you what you choose to add to it.
 
 Some ideas:
 
-* More instructions. Think of a program you'd like to write (for example, one that prints “Hello, world”) and imagine the instructions necessary to write it concisely. Then implement them.
+* Write an *assembler* program that can read source files in the G-machine assembly language and translate them into a binary format that the G-machine can run. For example, it could accept a program like this:
 
-* Support for a *stack* so that programmers can store temporary values (for example, intermediate results during a calculation). It's up to you what this would look like, but you could use instructions such as `PSHA` and `POPA` to “push” the current value of `A` to the stack, or “pop” (that is, retrieve the value at the top of the stack and move it into `A`).
+  ```asm
+  inc a
+  halt
+  ```
+  
+  and produce the corresponding sequence of opcodes as a `[]byte`. You could execute this directly using `RunProgram`, or you could write the byte data to a binary file on disk (a G-machine **executable**).
+  
+* Write an **emulator** program that reads these executable binary files and executes them.
 
-* Support for *subroutines*, so that commonly-used code doesn't have to be repeated everywhere it's needed. Instead, a program could `JUMP` to a specific memory address where the required subroutine lives, and when that subroutine executes the `RTRN` instruction, the calling program would be resumed at the next instruction following the `JUMP`. (You could use the stack to store this return address, but that's up to you.)
+* Extend your emulator so that it can optionally run the G-machine program one instruction at a time, showing the state of the CPU registers and memory after each instruction. This is called a **monitor** (because it lets you monitor what's going on) or a **debugger** (because that's very helpful when your program has a bug!)
 
-* An *assembler* that can read source files in the G-language and translate them into a binary format that a G-machine can run. For example, it could accept a program like this:
+* Write a **disassembler**. You can probably guess what this does: it's the inverse of an assembler. It takes binary executables as input, and produces G-machine assembly language source code as output. If you assemble a given program and then disassemble the result, you should get back what you started with.
 
-    ```
-    INCA
-    HALT
-    ```
+## Going further
 
-    and produce the corresponding sequence of opcodes as a `[]Word`.
+The G-machine's instruction set is very small, to keep things nice and simple and to make it easy to write a working emulator and assembler. If you want to continue the fun, you could adapt and extend your program to emulate a more complicated, and realistic CPU:
 
-* Support in the assembler for defining *constants* (values that can be referred to by a symbolic name). For example, you could write a program that defines a constant π and uses it like this:
+* The [**R8**](https://github.com/bitfield/rx82#r8-technical-manual) is a simple 8-bit CPU whose instruction set is very similar to the G-machine's (not by coincidence; I designed it to be the ideal next step after this project). It works exactly the same way; it just has more registers, more instructions, and some neat features that the G-machine doesn't have.
 
-    ```
-    CONS π 3.141592653589793
-    ...
-    SETA π
-    ```
+  Start with this one, because your G-machine emulator already implements a subset of the R8's instruction set.
 
-* Support for *variables* (memory locations that can be referred to by a symbolic name). For example, you could write a program that calculates a value and stores it in the variable `RESULT`:
+* The [6502](https://6502.org/) is a historical 8-bit CPU from the mid-1970s which was incredibly popular and widely used, in home computers such as the Apple II, BBC Micro, and Commodore 64. It's pretty similar to an R8, just with some interesting differences and a personality of its own.
 
-    ```
-    VARB RESULT
-    ...
-    SETA 0
-    INCA
-    INCA
-    MOVE A -> RESULT
-    ```
+  Emulating the 6502 is a choose-your-own-difficulty adventure, from fairly easy to quite complicated, depending how accurate and sophisticated you want your emulator to be.
 
-* A tool to produce *executable binaries* for your operating system from G-code programs. For example, it could take a source file like the example above and produce a macOS (or Linux, or Windows) binary that runs the corresponding program.
+* The [Z80](http://www.z80.info/) is another historical 8-bit CPU that's possibly even more ubiquitous than the 6502, used in the ZX Spectrum, MSX, Game Boy, and many other machines.
 
-* A simple *BIOS* (Basic Input/Output System) for the G-machine that lets programmers read and write characters from the terminal. For example, you might use it to print “Hello, world”. If you have subroutines, you could use them to provide a number of built-in utility functions, such as `WRITE` and `READ`.
+  Emulating it is more of a challenge than the 6502, since it has a large and fairly complex instruction set, but then it's a more powerful and interesting machine.
 
-* A way of writing *tests* for G-code programs in the G-language itself. For example, you could invent an `ASRT` instruction that lets you write a test like this:
+## Going MORE further
 
-    ```
-    ; Test that INCA increments the accumulator by 1
-    SETA 0
-    ASRT 0 ; Fail if A != 0
-    INCA
-    ASRT 1 ; Fail if A != 1
-    ```
+Modern CPUs aren't really that different to these early designs, just a lot faster, and they have many extra features and optimisations that emulator writers have to take account of. Once you fully understand a simple machine like the R8 or 6502 (and writing an emulator is the perfect way to do this), you're in a much better position to start learning about modern architectures like x86 or ARM—and maybe even emulating them.
 
-* A *monitor* (also known as a *debugger*) that gives you insight into the behaviour of running G-machine programs. For example, it would be useful to have a way to add a *breakpoint* at a specific place in the program, so that when the machine reaches it, it pauses execution and shows you the current state of its registers.
+Have fun!
 
-    It would also be neat to be able to single-step through the program, one instruction at a time, or set it running again until it reaches the next breakpoint.
-
-    If the machine ever encounters an illegal instruction or some other runtime error, it could automatically drop into monitor mode so that the programmer can fix the issue.
-
-* A *multiprocessing* operating system scheduler that makes a G-machine able to run several programs concurrently. (Not necessarily in parallel; for example, the scheduler could give each running process a fixed time slice on the single CPU “core” in turn.)
-
-* A *parallel processing* architecture with multiple G-machine “cores” available. This will need an improvement to the scheduler to allow it to distribute processes efficiently across cores.
-
-
-<small>Gopher image by [egonelbre](https://github.com/egonelbre/gophers)</small>
+<small>Gopher images by [egonelbre](https://github.com/egonelbre/gophers)</small>

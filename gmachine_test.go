@@ -9,13 +9,22 @@ import (
 func TestNew(t *testing.T) {
 	t.Parallel()
 	g := gmachine.New()
-	var wantP gmachine.Word = 0
-	if wantP != g.P {
-		t.Errorf("want initial P value %d, got %d", wantP, g.P)
+	if g.CPU.PC != 0 {
+		t.Errorf("after New, want pc == 0, got %d", g.CPU.PC)
 	}
-	var wantMemValue gmachine.Word = 0
-	gotMemValue := g.Memory[gmachine.DefaultMemSize-1]
-	if wantMemValue != gotMemValue {
-		t.Errorf("want last memory location to contain %d, got %d", wantMemValue, gotMemValue)
+	got := g.Memory[0]
+	if got != 0 {
+		t.Errorf("after New, want Memory[0] == 0, got %d", got)
 	}
 }
+
+// Uncomment this test once the previous test passes!
+// 
+// func TestHalt(t *testing.T) {
+// 	t.Parallel()
+// 	g := gmachine.New()
+// 	g.Run()
+// 	if g.CPU.PC != 1 {
+// 		t.Errorf("after `halt`, want pc == 1, got %d", g.CPU.PC)
+// 	}
+// }
