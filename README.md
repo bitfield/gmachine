@@ -109,7 +109,7 @@ Well, we know `pc` starts at zero, so the first thing the machine will do is rea
 
 To put it another, equivalent, way, we're submitting the following program to the machine:
 
-```
+```asm
 nop
 halt
 ```
@@ -121,7 +121,7 @@ Let's make it work!
 1. Creates a new G-machine.
 2. Sets the contents of the first memory location to 1 (the opcode for `nop`).
 3. Calls `Run()` on the machine.
-4. Tests that the machine's `P` register contains the value `2`. If not, the test should fail with a message like `"want P == 2, got ..."`
+4. Tests that the machine's `pc` register contains the value `2`. If not, the test should fail with a message like `"want pc == 2, got ..."`
 
 The test should fail, we expect, because we haven't yet implemented the `nop` instruction. If we've strictly obeyed the test-driven development process, we haven't even implemented a loop in the `Run()` method, or read any instructions from memory, because we didn't need to until now. So the test should fail because `pc` contains 1 instead of 2.
 
@@ -161,13 +161,13 @@ That's the 'current result', and you can keep on adding, subtracting, multiplyin
 
 We'll need to be able to modify the contents of this register, and the simplest way to do that is to **increment** (add one to) or **decrement** (subtract one from) it. Let's add some new instructions to do that:
 
-* `inc a`
-* `dec a`
+* `inc a` (opcode 48)
+* `dec a` (opcode 64)
 
 **TASK:** Add a new test `TestIncA`. The test should do the following:
 
 1. Create a new G-machine.
-2. Set the first memory location to the instruction `inc a`.
+2. Set the first memory location to the value corresponding to the opcode for `inc a`.
 3. Run the machine.
 4. Verify that the `a` register's value is now `1` (don't worry about testing `pc` too; we already know that works).
 
@@ -185,7 +185,7 @@ For example, we can set the `a` register to any value we want, just by executing
 
 Consider this program in the little language we've designed for the G-machine:
 
-```
+```asm
 inc a
 inc a
 inc a
@@ -216,9 +216,9 @@ For example, consider your 'subtract 2' program. It can only operate on the valu
 
 To do that, we need some concept of **data**. That is to say, treating a number stored in memory not as an opcode signifying a machine instruction, but merely as a number. In order to do something useful with a value in memory like this, the first thing we'll want to do is **load** it into a register (`a`, for example).
 
-Suppose we were able to write an instruction that means “load `a` with the value 5”. It might look like this in our assembly language:
+The G-machine has an instruction for that, called `ld a` (opcode 16). For example:
 
-```
+```asm
 ld a, 5
 ```
 
@@ -226,7 +226,7 @@ Here, `ld a` is a **mnemonic** (that's what we call the human-readable symbolic 
 
 The effect of this instruction would be to set the `a` register to the value 5 (and we could of course substitute any other value we choose). How would this work?
 
-We know how to define new instructions; we've done that a few times already. Adding a new opcode for `ld a` is no problem. But there's something new here: this opcode requires an operand: a value to operate on. This value will, naturally, be stored in memory.
+We know how to define new instructions; we've done that a few times already. Adding the new opcode for `ld a` is no problem. But there's something new here: this opcode requires an operand: a value to operate on. This value will, naturally, be stored in memory.
 
 How could we incorporate this idea into our existing G-machine architecture? Think about it a little before you read on.
 
@@ -236,6 +236,8 @@ One way we could do this is to have the `ld a` instruction trigger a memory fetc
 
 So as part of the implementation for the `ld a` opcode, we could read the contents of memory pointed to by the `pc` register, and put that value into the `a` register. (We'll need to increment `pc` after this, too, or we won't be able to fetch the next instruction correctly.)
 
+For example, if the program were `ld a, 5`, the memory might contain the byte values 16 (opcode for `ld a`) and 5 (operand value 5).
+
 **TASK:** Write a test for the `ld a` instruction, and make it pass. It should not only verify the contents of the `a` register, but also that the `pc` register is correctly updated following the data fetch.
 
 ## Programs on arbitrary data
@@ -244,7 +246,7 @@ Excellent! This is an important new capability for the G-machine: we can now wri
 
 **TASK:** Rewrite your test for the 'subtract 2 from 3' program so that it executes and verifies the following assembly language program instead:
 
-```
+```asm
 ld a, 3
 dec a
 dec a
