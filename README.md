@@ -15,7 +15,7 @@ We will be using a simplified model of a computer system in which there are two 
 
 At any given moment, the G-machine has a certain **state**: the contents of the CPU's registers, and the contents of its memory.
 
-A computer has to deal with data in fixed-size chunks, and the usual chunk size is called a **byte**. So each register stores one byte of data, and the memory is a sequence of bytes, each with its own unique *address* (which is also a byte).
+A computer has to deal with data in fixed-size chunks, and the usual chunk size is called a **byte**. So each register stores one byte of data, and the memory is a sequence of bytes, each with its own unique *address* (which is two bytes long).
 
 The first thing users need to be able to do is to create a new G-machine they can use. So there's a `gmachine.New()` function that returns a G-machine in its default initial state, which is specified by a test.
 
@@ -56,34 +56,34 @@ We can imagine a variety of useful instructions which the G-machine might implem
 
 For now, let's keep it simple, and implement a single instruction named `halt`, which does nothing except stop the machine. It's entirely up to us which numeric values to assign to opcodes, and it makes no difference to the machine as long as each opcode uniquely identifies an instruction. For simplicity, let's assign `halt` the opcode 0. You don't need to write any code for this for now, just remember that opcode 0 represents `halt`.
 
-## The `Run()` method
+## The `Step()` method
 
 Now that we have an instruction, we have something for the machine to do: execute it!
 
-We'll need a way for users to start the machine running, which is to say performing the fetch-execute cycle, until it's either told to stop, or runs into some kind of error. So there's a method on the `Machine` object named `Run()` that will do this.
+We'll need a way for users to tell the machine to do one iteration of its fetch-execute cycle: fetch the next instruction from memory at the address held by `pc`, execute it, and return. So there's a method on the `Machine` object named `Step()` that will do this.
 
-What would happen if we were to call the `Run()` method to start a new machine running, given that its memory and registers contain all zeroes? Well, let's follow the fetch-execute cycle:
+What would happen if we were to call the `Step()` method on a newly-initialised machine, given that its memory and registers contain all zeroes? Well, let's follow the fetch-execute cycle:
 
 1. Fetch the next instruction from memory. That is to say, look at the `pc` register to see what memory address it contains, and read the instruction at that address.
 2. Since the `pc` register contains zero, we read the byte at address zero, which is zero.
 3. We increment the `pc` register so that it points to the next memory address to read from (in this case, 1).
-4. Execute the current instruction, whose opcode is 0. We know this is the opcode for the `halt` instruction, so instead of jumping back to step 1, the `Run()` method should return instead.
+4. Execute the current instruction, whose opcode is 0. We know this is the opcode for the `halt` instruction, so there's nothing to do; we just need to return.
 
-So the upshot of all this is that if you call `Run()` on a new machine, it should return almost immediately (because it read and executed the `halt` instruction), and the state of the machine should be unchanged except that the `pc` register now contains the value 1, because we incremented it previously.
+So the upshot of all this is that if you call `Step()` on a new machine, the state of the machine should be unchanged after it returns except that the `pc` register now contains the value 1.
 
 Let's find out!
 
 **TASK:** Uncomment the test function `TestHalt`, which does the following:
 
 1. Creates a new G-machine.
-2. Calls `Run()` on the machine.
+2. Calls `Step()` on the machine.
 3. Tests that the machine's `pc` register contains the value 1. If not, the test should fail with a message like `"want pc == 1, got ..."`
 
-This test will not pass yet, because the `Run()` method currently does nothing. Over to you to fix that!
+This test will not pass yet, because the `Step()` method currently does nothing. Over to you to fix that!
 
-**TASK:** Write the _minimum_ code necessary to make the new test pass. (I'm serious about this. For example, even though we talked about a fetch-execute _cycle_, you won't need to implement a loop inside the `Run()` method, because the test doesn't require it to loop. All it needs to do is increment the `pc` register and return.)
+**TASK:** Write the code in `Step` needed to make this test pass.
 
-When you have both tests passing, go on to the next section.
+When the test is passing, go on to the next section.
 
 # 3: Busy Doing Nothing
 
@@ -103,9 +103,9 @@ We ran your prototype by the Marketing group, and the feedback was generally pos
 
 The next instruction to implement will be `nop` (short for “No OPeration”), which does nothing. This might sound a bit similar to the `halt` instruction, which does nothing and halts, but there _is_ a difference: the `nop` instruction doesn't halt! Let's assign it opcode 1.
 
-So let's do another thought experiment. What happens if we write the opcode for the `nop` instruction into memory address zero, and start the machine? (Think about it before you read on.)
+So let's do another thought experiment. What happens if we write the opcode for the `nop` instruction into memory address zero, and `Step()` the machine twice? (Think about it before you read on.)
 
-Well, we know `pc` starts at zero, so the first thing the machine will do is read the instruction at address zero, which is `nop`. Since this has no effect, the fetch-execute cycle will continue, and the machine will fetch the instruction at address 1, which is `halt`. And the machine should stop, with `pc` containing the value `2`.
+Well, we know `pc` starts at zero, so the first thing the machine will do is read the instruction at address zero, which is `nop`. Since this has no effect, the `Step()` method will just return. When we call it again, the machine will fetch the instruction at address 1, which is `halt`. And `pc` should end up containing the value 2.
 
 To put it another, equivalent, way, we're submitting the following program to the machine:
 
@@ -120,18 +120,35 @@ Let's make it work!
 
 1. Creates a new G-machine.
 2. Sets the contents of the first memory location to 1 (the opcode for `nop`).
-3. Calls `Run()` on the machine.
-4. Tests that the machine's `pc` register contains the value `2`. If not, the test should fail with a message like `"want pc == 2, got ..."`
-
-The test should fail, we expect, because we haven't yet implemented the `nop` instruction. If we've strictly obeyed the test-driven development process, we haven't even implemented a loop in the `Run()` method, or read any instructions from memory, because we didn't need to until now. So the test should fail because `pc` contains 1 instead of 2.
-
-**TASK:** Write the minimum code necessary to make the test pass. _Now_ it's necessary to write a loop, and read the next opcode from memory, and take different actions depending on its value (hint: you could use a `switch` statement for this).
+3. Calls `Step()` on the machine.
+4. Tests that `pc` is 1.
+5. Calls `Step()` again.
+6. Tests that `pc` is now 2.
 
 Remember, opcode 0 is `halt`, and opcode 1 is `nop`.
 
+## Keep on runnin'
+
+Of course, there's really no difference between `halt` and `nop` if we're just calling `Step`: the result is the same either way. The `halt` instruction only has a real effect if the machine is _running_, and we don't have that yet.
+
+So suppose we had a method called `Run`, whose job is to step the machine continuously _until_ it gets a `halt` instruction. What would a test for `Run` look like? You might like to think about this a bit and see if you can come up with something. Your test should be able to distinguish between calling `Run` on the following two programs:
+
+```asm
+halt
+```
+
+and:
+
+```asm
+nop
+halt
+```
+
+Essentially, the only difference is the expected value of `pc` afterwards, isn't it? In the first case, it would be 1, and in the second case, 2. Try writing a test along these lines. Now see if you can write a `Run` method that passes the test!
+
 ## Opcode constants
 
-Once this test passes, we can do a little refactoring.
+Now we can both `Run` and `Step` the machine, it's time to do a little refactoring. We're going to be using these opcodes a lot, so it'll be helpful to define some constants with informative names.
 
 **TASK:** Define a new integer constant `NOP` with the value 1. You'll find there's already a constant `HALT` with the value 0, so you can put `NOP` next to it.
 
@@ -168,14 +185,14 @@ We'll need to be able to modify the contents of this register, and the simplest 
 
 1. Create a new G-machine.
 2. Set the first memory location to the value corresponding to the opcode for `inc a`.
-3. Run the machine.
-4. Verify that the `a` register's value is now `1` (don't worry about testing `pc` too; we already know that works).
+3. `Run` the machine. It should halt after the first instruction, because the memory otherwise contains all zeroes, which is the opcode for `halt`.
+4. Verify that the `a` register's value is now 1 (don't worry about testing `pc` too; we already know that works).
 
 Remember, we need to see the test fail the right way before we start implementing the code necessary to make it pass. Assuming the test is correct, what will be the result of running it without that implementation? Figure this out for yourself before actually running the test. If the test produces the result you expect, we can have some confidence that it's correct.
 
 **TASK:** Implement the `inc a` instruction so that your test passes.
 
-**TASK:** Add a corresponding test for the `dec a` instruction, that first of all sets the `a` register to the value `2`, then executes a `dec a` instruction, and verifies that the result is `1`. Implement the `dec a` instruction so that the test passes.
+**TASK:** Add a corresponding test for the `dec a` instruction, that first of all sets the `a` register to the value 2, then executes a `dec a` instruction, and verifies that the result is 1. Implement the `dec a` instruction so that the test passes.
 
 ## Doing calculations
 

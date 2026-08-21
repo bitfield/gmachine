@@ -23,7 +23,7 @@ func TestNew(t *testing.T) {
 // func TestHalt(t *testing.T) {
 // 	t.Parallel()
 // 	g := gmachine.New()
-// 	g.Run()
+// 	g.Step()
 // 	if g.CPU.PC != 1 {
 // 		t.Errorf("after `halt`, want pc == 1, got %d", g.CPU.PC)
 // 	}
